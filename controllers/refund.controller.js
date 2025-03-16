@@ -1,4 +1,5 @@
 const { Refund } = require("../models");
+const { Op } = require("sequelize");
 class requestHandler {
   // POST
   requestRefund = (req, res) => {
@@ -45,18 +46,33 @@ class requestHandler {
   // GET
   getRefunds = (req, res) => {
     let { query } = req;
-    let startDate = query.periodStart;
-    let endDate = query.periodEnd
+    
+    let TIMEZONE_OFFSET = query.timezone ? parseInt(query.timezone) : -3;
     let page = query.page ? parseInt(query.page) : 1;
     let limit = query.limit ? parseInt(query.limit) : 50;
-
-    Refund.findAll({
-      // where: {
-      //   userId: req.user.id
-      // },
+    console.log( TIMEZONE_OFFSET)
+    let filter = {
+      where: {
+        // userId: req.user.id,
+      },
       offset: (page - 1) * limit,
       limit: limit
-    }).then((response) => {
+    }
+
+    if (query.periodStart) {
+      let startDate = new Date(query.periodStart);
+      startDate.setUTCMinutes(startDate.getMinutes() - TIMEZONE_OFFSET * 60);
+      filter.where.date = { [Op.gte]: startDate };
+    } 
+    if (query.periodEnd) {
+      let endDate = new Date(query.periodEnd);
+      endDate.setUTCHours(23, 59, 59, 999);
+      endDate.setUTCMinutes(endDate.getMinutes() - TIMEZONE_OFFSET * 60); 
+      filter.where.date = filter.where.date || {}; 
+      filter.where.date[Op.lte] = endDate;
+    }
+
+    Refund.findAll(filter).then((response) => {
         res.status(200).send(response);
     }).catch((err) => {
         console.log(err);

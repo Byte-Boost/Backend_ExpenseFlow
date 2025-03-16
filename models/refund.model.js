@@ -6,6 +6,15 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       primaryKey: true,
     },
+    // future foreign key
+    userId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    date: {
+      type: DataTypes.DATE,
+      allowNull: false,
+    },
     type: {
       type: DataTypes.ENUM("value", "quantity"),
       allowNull: false,

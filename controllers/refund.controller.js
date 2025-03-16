@@ -18,6 +18,28 @@ class requestHandler {
       res.status(400).send();
     });
   };
+
+  authRefund = (req, res) => {
+    let { params } = req;
+    let { query } = req;
+
+    console.log(query.approved)
+    console.log(params)
+
+    Refund.update({
+      status: query.approved === "true" ? "approved" : "rejected"
+    }, {
+      where: 
+      {
+        id: params.id
+      }
+    }).then((response) => {
+      res.status(200).send();
+    }).catch((err) => {
+      console.log(err);
+      res.status(400).send({err: "Invalid request"});
+    })
+  }
 }
 
 module.exports = new requestHandler();

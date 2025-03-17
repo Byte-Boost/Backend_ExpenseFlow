@@ -10,6 +10,7 @@ app.use(express.json())
 
 app.use('/refund', require('./routes/refund.routes'));
 // app.use('/template', require('./routes/template.routes'));
+app.use('/user', require('./routes/user.routes'));
 
 db.sequelize.sync().then(()=>{
   app.listen(PORT, ()=>console.log(`Server running on https://localhost:${PORT}`));

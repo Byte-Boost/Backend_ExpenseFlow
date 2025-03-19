@@ -1,8 +1,7 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const pool = require('./db');//i dont trust what i doing
 
-class accountService {
+class loginService {
 
     getHashed = async (password) => {
         const salt = await bcrypt.genSalt()  //create a random salt that goes before the password, like eUsFhiYouPassword
@@ -15,14 +14,15 @@ class accountService {
     }
 
     getToken = async (user) => {
-        const token = jwt.sign({ "id" : user.id, "username" : user.username, "role": user.roleId, "area": user.area, "admin": user.admin}, process.env.JWT_SECRET);
+        const token = jwt.sign({ "id" : user.id, "username" : user.username}, process.env.JWT_SECRET);
         return token;
     }
     login = async (user, password)=>{
         const passwordMatches = await this.compareHash(password, user.password);
         if(passwordMatches) return this.getToken(user);
-        else throw new Error("Invalid password or username");
+        else throw new Error("Usuário ou senha inválidos");
     }
 }
 
-module.exports = new accountService();
+module.exports = new loginService();
+

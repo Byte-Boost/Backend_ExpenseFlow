@@ -17,4 +17,5 @@ class requestHandler {
   };
 }
 
-module.exports = new requestHandler();
+module.exports = new requestHandler
+

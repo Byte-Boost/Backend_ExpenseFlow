@@ -6,36 +6,30 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       primaryKey: true,
     },
-    // future foreign key
     userId: {
       type: DataTypes.INTEGER,
       allowNull: false,
     },
     date: {
       type: DataTypes.DATE,
-      allowNull: false,
-    },
-    type: {
-      type: DataTypes.ENUM("value", "quantity"),
-      allowNull: false,
-    },
-    value: {
-      type: DataTypes.FLOAT,
-      allowNull: false,
-    },
-    attachmentRef: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    description: {
-      type: DataTypes.STRING,
       allowNull: true,
     },
     status: {
-      type: DataTypes.ENUM("pending", "approved", "rejected"),
-      defaultValue: "pending",
+      type: DataTypes.ENUM("new", "in-process", "approved", "rejected"),
+      defaultValue: "new",
       allowNull: false,
-    }
+    },
   });
+
+  Refund.associate = function(models) {
+    Refund.hasMany(models.Expense, {
+      foreignKey: 'refundId',
+    }),
+    Refund.belongsTo(models.User, {
+      foreignKey: 'userId',
+      onDelete: 'CASCADE'
+    })
+  };
+  
   return Refund;
 };

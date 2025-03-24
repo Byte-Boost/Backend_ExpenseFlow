@@ -1,12 +1,27 @@
 const { Refund } = require("../models");
+const { Expense } = require("../models");
 const { Op } = require("sequelize");
 class requestHandler {
-  // POST
-  requestRefund = (req, res) => {
+  // POST 
+  createRefund = (req, res) => {
+    let refund = {
+      userId: req.user.id,
+    }
+    
+    Refund.create(refund).then((response)=>{
+      res.status(201).send({refundId: response.id});
+    }).catch((err) => {
+      console.log(err);
+      res.status(400).send();
+    });
+  };
+  createExpense = (req, res) => {
     let { body } = req;
     let attachmentPath = "" // Path got from the file upload middleware
-    let refund = {
-      userId: 1, //req.user.id, when authentication middleware is implemented
+    
+    let expense = {
+      userId: req.user.id, 
+      refundId: body.refundId,
       type: body.type,
       value: body.value,
       date: new Date(),
@@ -14,33 +29,70 @@ class requestHandler {
       description: body.description || null,
     }
     
-    Refund.create(refund).then((response)=>{
-      res.status(201).send();
+    Expense.create(expense).then((response)=>{
+      res.status(201).send({expenseId: response.id});
     }).catch((err) => {
       console.log(err);
       res.status(400).send();
     });
   };
 
+  // PATCH
+  closeRefund = (req, res) => {
+    let { params } = req;
+    Refund.findOne({
+      where: {
+        id: params.id
+      }
+    }).then((response) => {
+      if (response != null && response.status == "new"){
+        Refund.update({ date: new Date(), status: "in-process" }, { where: { id: response.id } })
+        .then(()=>{
+            res.status(200).send();
+        }).catch ((error)=>{
+          console.error(error);
+          res.status(500).send({ error: "Error closing refund" });
+        }) 
+      }
+    }).catch((err) => {
+      console.log(err);
+      res.status(400).send();
+    });
+  }
   authRefund = (req, res) => {
     let { params } = req;
     let { query } = req;
 
     // check for authorization
-
-    Refund.update({
-      status: query.approved === "true" ? "approved" : "rejected"
-    }, {
-      where: 
-      {
+    Refund.findOne({
+      where: {
         id: params.id
       }
     }).then((response) => {
-      res.status(200).send();
+
+      if (response != null && response.status == "in-process"){
+        Refund.update({
+          status: query.approved === "true" ? "approved" : "rejected"
+        }, {
+          where: 
+          {
+            id: response.id
+          }
+        }).then((response) => {
+          res.status(200).send();
+        }).catch((err) => {
+          console.log(err);
+          res.status(400).send({err: "Invalid request"});
+        })
+      } else {
+        console.log("Refund non-existent or not in-process");
+        res.status(400).send({err: "invalid request"})
+      }
+
     }).catch((err) => {
       console.log(err);
-      res.status(400).send({err: "Invalid request"});
-    })
+      res.status(400).send();
+    });
   }
 
   // GET
@@ -50,13 +102,19 @@ class requestHandler {
     let TIMEZONE_OFFSET = query.timezone ? parseInt(query.timezone) : -3;
     let page = query.page ? parseInt(query.page) : 1;
     let limit = query.limit ? parseInt(query.limit) : 50;
-    console.log( TIMEZONE_OFFSET)
+
     let filter = {
       where: {
-        // userId: req.user.id,
+        userId: req.user.id,
       },
       offset: (page - 1) * limit,
-      limit: limit
+      limit: limit,
+      include: [
+        {
+          model: Expense,
+          attributes: ["id", "date", "type", "value"], // Only fetch these fields
+        },
+      ]
     }
 
     if (query.periodStart) {
@@ -79,12 +137,25 @@ class requestHandler {
         res.status(400).send();
     });
   }
-
   getRefundById = (req, res) => {
     let { params } = req;
     Refund.findOne({
       where: {
-        // userId: req.user.id,
+        userId: req.user.id,
+        id: params.id
+      }
+    }).then((response) => {
+      res.status(200).send(response);
+    }).catch((err) => {
+      console.log(err);
+      res.status(400).send();
+    });
+  }
+  getExpenseById = (req, res) => {
+    let { params } = req;
+    Expense.findOne({
+      where: {
+        userId: req.user.id,
         id: params.id
       }
     }).then((response) => {

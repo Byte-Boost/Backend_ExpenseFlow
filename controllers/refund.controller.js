@@ -1,6 +1,8 @@
 const { Refund } = require("../models");
 const { Expense } = require("../models");
 const { Op } = require("sequelize");
+const fs = require("fs");
+
 class requestHandler {
   // POST 
   createRefund = (req, res) => {
@@ -17,15 +19,13 @@ class requestHandler {
   };
   createExpense = (req, res) => {
     let { body } = req;
-    let attachmentPath = "" // Path got from the file upload middleware
-    
     let expense = {
       userId: req.user.id, 
       refundId: body.refundId,
       type: body.type,
       value: body.value,
       date: new Date(),
-      attachmentRef: attachmentPath,
+      attachmentRef: req.file.path,
       description: body.description || null,
     }
     
@@ -33,6 +33,13 @@ class requestHandler {
       res.status(201).send({expenseId: response.id});
     }).catch((err) => {
       console.log(err);
+      // if (req.file && req.file.path) {
+      //   fs.unlink(req.file.path, (err) => {
+      //       if (err) console.error("Failed to delete file:", err);
+      //       else console.log("Deleted file:", req.file.path);
+      //   });
+      // }
+      // !IMPORTANT WILL FIX THIS LATER - ENSURE THE FILE IS DELETED IF THE ENTRY IS NOT CREATED
       res.status(400).send();
     });
   };

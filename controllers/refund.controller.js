@@ -17,10 +17,22 @@ class requestHandler {
       res.status(400).send();
     });
   };
-  createExpense = (req, res) => {
+  createExpense = async (req, res) => {
     let { body } = req;
+    try {
+      const refundExists = await Refund.findByPk(body.refundId);
+      
+      if (!refundExists) {
+        if (req.file && req.file.path) {
+          fs.unlink(req.file.path, (err) => {
+            if (err) console.error("Failed to delete file:", err);
+          });
+        }
+        return res.status(400).send({ error: "Invalid refundId" });
+      };
+
     let expense = {
-      userId: req.user.id, 
+      userId: body.userId, 
       refundId: body.refundId,
       type: body.type,
       value: body.value,
@@ -31,17 +43,17 @@ class requestHandler {
     
     Expense.create(expense).then((response)=>{
       res.status(201).send({expenseId: response.id});
-    }).catch((err) => {
-      console.log(err);
-      // if (req.file && req.file.path) {
-      //   fs.unlink(req.file.path, (err) => {
-      //       if (err) console.error("Failed to delete file:", err);
-      //       else console.log("Deleted file:", req.file.path);
-      //   });
-      // }
-      // !IMPORTANT WILL FIX THIS LATER - ENSURE THE FILE IS DELETED IF THE ENTRY IS NOT CREATED
-      res.status(400).send();
-    });
+    })
+    } catch (err) {
+      
+      if (req.file && req.file.path) {
+        fs.unlink(req.file.path, (err) => {
+          if (err) console.error("Failed to delete file:", err);
+        });
+      }
+  
+      return res.status(400).send({ error: "Failed to create expense" });
+    }
   };
 
   // PATCH

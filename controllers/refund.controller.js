@@ -1,6 +1,8 @@
 const { Refund } = require("../models");
 const { Expense } = require("../models");
 const { Op } = require("sequelize");
+const fs = require("fs");
+
 class requestHandler {
   // POST 
   createRefund = (req, res) => {
@@ -15,26 +17,43 @@ class requestHandler {
       res.status(400).send();
     });
   };
-  createExpense = (req, res) => {
+  createExpense = async (req, res) => {
     let { body } = req;
-    let attachmentPath = "" // Path got from the file upload middleware
-    
+    try {
+      const refundExists = await Refund.findByPk(body.refundId);
+      
+      if (!refundExists) {
+        if (req.file && req.file.path) {
+          fs.unlink(req.file.path, (err) => {
+            if (err) console.error("Failed to delete file:", err);
+          });
+        }
+        return res.status(400).send({ error: "Invalid refundId" });
+      };
+
     let expense = {
       userId: req.user.id, 
       refundId: body.refundId,
       type: body.type,
       value: body.value,
       date: new Date(),
-      attachmentRef: attachmentPath,
+      attachmentRef: req.file.path,
       description: body.description || null,
     }
     
     Expense.create(expense).then((response)=>{
       res.status(201).send({expenseId: response.id});
-    }).catch((err) => {
-      console.log(err);
-      res.status(400).send();
-    });
+    })
+    } catch (err) {
+      
+      if (req.file && req.file.path) {
+        fs.unlink(req.file.path, (err) => {
+          if (err) console.error("Failed to delete file:", err);
+        });
+      }
+  
+      return res.status(400).send({ error: "Failed to create expense" });
+    }
   };
 
   // PATCH

@@ -32,7 +32,7 @@ class requestHandler {
       };
 
     let expense = {
-      userId: body.userId, 
+      userId: req.user.id, 
       refundId: body.refundId,
       type: body.type,
       value: body.value,

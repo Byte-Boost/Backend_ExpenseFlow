@@ -1,10 +1,12 @@
 const fs = require('fs');
 const path = require('path');
 
-const uploadDir = path.join(__dirname, "../userdata/receipt"); 
+const uploadDir = path.join(__dirname, "./userdata/receipt"); 
 // This shouldn't be hard coded in but i don't want to mess with it right now.
 
 async function deleteUploads(){
+  if (!fs.existsSync(uploadDir)) return;
+  
   fs.readdir( uploadDir , (err, files) => {
       if (err) throw err;
       for (const file of files) {

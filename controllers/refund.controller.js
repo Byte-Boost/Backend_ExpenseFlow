@@ -23,11 +23,12 @@ class requestHandler {
       const refundExists = await Refund.findByPk(body.refundId);
       
       if (!refundExists) {
-        if (req.file && req.file.path) {
-          fs.unlink(req.file.path, (err) => {
+        if (body.file) {
+          fs.unlink(body.file, (err) => {
             if (err) console.error("Failed to delete file:", err);
           });
         }
+        console.log("Refund not found:", body.refundId);
         return res.status(400).send({ error: "Invalid refundId" });
       };
 
@@ -37,7 +38,7 @@ class requestHandler {
       type: body.type,
       value: body.value,
       date: new Date(),
-      attachmentRef: req.file.path,
+      attachmentRef: body.file,
       description: body.description || null,
     }
     
@@ -46,12 +47,12 @@ class requestHandler {
     })
     } catch (err) {
       
-      if (req.file && req.file.path) {
-        fs.unlink(req.file.path, (err) => {
+      if (body.file) {
+        fs.unlink(body.file, (err) => {
           if (err) console.error("Failed to delete file:", err);
         });
       }
-  
+      console.error("Error creating expense:", err);
       return res.status(400).send({ error: "Failed to create expense" });
     }
   };

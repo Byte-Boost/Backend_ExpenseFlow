@@ -125,6 +125,7 @@ class requestHandler {
 
     let filter = {
       where: {
+        status: {[Op.ne]: "new"},
         userId: req.user.id,
       },
       offset: (page - 1) * limit,
@@ -150,8 +151,15 @@ class requestHandler {
       filter.where.date[Op.lte] = endDate;
     }
 
-    Refund.findAll(filter).then((response) => {
-        res.status(200).send(response);
+    Refund.findAll(filter).then((refunds) => {
+      const refundsWithTotal = refunds.map(refund => {
+        const totalValue = refund.Expenses.reduce((sum, expense) => sum + expense.value, 0);
+        return {
+            ...refund.toJSON(),
+            totalValue,
+        };
+      });
+      res.status(200).send(refundsWithTotal);
     }).catch((err) => {
         console.log(err);
         res.status(400).send();

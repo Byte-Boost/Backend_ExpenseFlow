@@ -28,6 +28,10 @@ module.exports = (sequelize, DataTypes) => {
     Refund.belongsTo(models.User, {
       foreignKey: 'userId',
       onDelete: 'CASCADE'
+    }),
+    Refund.belongsTo(models.Project, {
+      foreignKey: 'projectId',
+      onDelete: 'CASCADE'
     })
   };
   

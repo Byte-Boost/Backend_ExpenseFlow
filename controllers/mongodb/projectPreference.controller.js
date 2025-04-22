@@ -2,20 +2,19 @@ const ProjectPreferences = require('../../models/mongodb/project.preference.js')
 class requestHandler {
     //Post
     createPreference = async (req, res) => {
-    try {
-        const pref = await ProjectPreferences.create({
-        projectId: req.body.projectId,
-        colorTheme: req.body.colorTheme,
-        managerName: req.body.managerName,
-        priceLimit: req.body.priceLimit,
-        qtyPricePerUnit: req.body.qtyPricePerUnit
-        });
-
-        res.status(201).json(pref);
-    } catch (err) {
-        console.log(err);
-        res.status(500).send('Error saving preferences');
-    }
+        let preferences = {
+            projectId: req.body.projectId,
+            refundLimit: req.body.refundLimit,
+            expenseLimit: req.body.expenseLimit,
+            quantityValues: req.body.quantityValues,
+        };
+        
+        ProjectPreferences.create(preferences).then((response)=>{
+            res.status(201).json(response);
+        }).catch ((err)=>{
+            console.log(err);
+            res.status(500).send('Error saving preferences');
+        })
     };
 
     // GET

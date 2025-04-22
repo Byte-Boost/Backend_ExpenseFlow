@@ -10,8 +10,24 @@ class requestHandler {
             name: body.name,
         }
 
-        Project.create(project).then((response) => {
-            res.status(201).send({projectId: response.id});
+        Project.create(project).then((project) => {
+            if (body.preferences != null) {
+                let preferences = {
+                    projectId: project.id,
+                    refundLimit: body.preferences.refundLimit,
+                    expenseLimit: body.preferences.expenseLimit,
+                    quantityValues: body.preferences.quantityValues,
+                };
+    
+                ProjectPreferences.create(preferences).then((response) => {
+                    res.status(201).send({projectId: project.id});
+                }).catch((err) => {
+                    console.log(err);
+                    res.status(201).send({projectId: project.id, warning: "Preferences not saved"});
+                });
+            } else{
+                res.status(201).send({projectId: project.id});
+            }
         }).catch((err) => {
             console.log(err);
             res.status(400).send();
@@ -50,10 +66,9 @@ class requestHandler {
             ProjectPreferences.findOne({ projectId: project.id }).then((preferences)=>{
                 if (preferences) {
                     project.dataValues.preferences = {
-                        colorTheme: preferences.colorTheme,
-                        managerName: preferences.managerName,
-                        priceLimit: preferences.priceLimit,
-                        qtyPricePerUnit: preferences.qtyPricePerUnit
+                        refundLimit: preferences.refundLimit,
+                        expenseLimit: preferences.expenseLimit,
+                        quantityValues: preferences.quantityValues,
                     };
                 } else project.dataValues.preferences = null;
                 res.status(200).send(project);

@@ -1,5 +1,7 @@
 const express = require('express');
 const app = express();
+const connectMongo = require('./mongodb');
+connectMongo();
 const PORT = process.env.PORT || 8080;
 const authMiddleware = require('./middleware/auth.middleware');
 const db = require('./models');

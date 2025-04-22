@@ -138,6 +138,15 @@ class requestHandler {
       ]
     }
 
+    if (query.status) {
+      const statusList = query.status.split(',').map(s => s.trim());
+      where.status = { [Op.in]: statusList };
+    }
+  
+    if (query.projectId) {
+      where.projectId = query.projectId;
+    }
+
     if (query.periodStart) {
       let startDate = new Date(query.periodStart);
       startDate.setUTCMinutes(startDate.getMinutes() - TIMEZONE_OFFSET * 60);
@@ -151,7 +160,17 @@ class requestHandler {
       filter.where.date[Op.lte] = endDate;
     }
 
-    Refund.findAll(filter).then((refunds) => {
+    Refund.findAll({
+      where,
+      offset: (page - 1) * limit,
+      limit: limit,
+      include: [
+        {
+          model: Expense,
+          attributes: ["id", "date", "type", "value"],
+        },
+      ]
+    }).then((refunds) => {
       const refundsWithTotal = refunds.map(refund => {
         const totalValue = refund.Expenses.reduce((sum, expense) => sum + expense.value, 0);
         return {

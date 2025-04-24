@@ -3,7 +3,7 @@ const ProjectPreferences = require('../models/mongodb/project.preference.js');
 const fs = require("fs");
 
 class requestHandler {
-    //POST
+    // POST
     createProject = (req, res) => {
         let { body } = req;
         let project = {

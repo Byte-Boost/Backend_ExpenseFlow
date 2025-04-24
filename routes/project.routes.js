@@ -10,4 +10,6 @@ router.get('/preferences', preferencesController.getAllPreferences);
 router.get('/:id', controller.getProjectById);
 router.get('/preferences/:projectId', preferencesController.getPreferencesById);
 
+router.put('/preferences/:projectId', preferencesController.updatePreferenceById);
+
 module.exports = router;

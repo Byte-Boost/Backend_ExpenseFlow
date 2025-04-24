@@ -1,20 +1,33 @@
 const { Refund } = require("../models");
 const { Expense } = require("../models");
+const { Project } = require("../models");
 const { Op } = require("sequelize");
 const fs = require("fs");
 
 class requestHandler {
   // POST 
   createRefund = (req, res) => {
-    let refund = {
-      userId: req.user.id,
-    }
+    let { body, user } = req;
     
-    Refund.create(refund).then((response)=>{
-      res.status(201).send({refundId: response.id});
+    Project.findOne({ where: {
+        name: body.projectName,
+    }}).then((project) => {
+      
+      let refund = {
+        projectId: project.id,
+        userId: user.id,
+      }
+      
+      Refund.create(refund).then((response)=>{
+        res.status(201).send({refundId: response.id});
+      }).catch((err) => {
+        console.log(err);
+        res.status(400).send();
+      });
+
     }).catch((err) => {
       console.log(err);
-      res.status(400).send();
+      res.status(400).send({ error: "Project not found" });
     });
   };
   createExpense = async (req, res) => {
@@ -140,11 +153,11 @@ class requestHandler {
 
     if (query.status) {
       const statusList = query.status.split(',').map(s => s.trim());
-      where.status = { [Op.in]: statusList };
+      filter.where.status[Op.in] = statusList;
     }
   
     if (query.projectId) {
-      where.projectId = query.projectId;
+      filter.where.projectId = query.projectId;
     }
 
     if (query.periodStart) {
@@ -160,17 +173,7 @@ class requestHandler {
       filter.where.date[Op.lte] = endDate;
     }
 
-    Refund.findAll({
-      where,
-      offset: (page - 1) * limit,
-      limit: limit,
-      include: [
-        {
-          model: Expense,
-          attributes: ["id", "date", "type", "value"],
-        },
-      ]
-    }).then((refunds) => {
+    Refund.findAll(filter).then((refunds) => {
       const refundsWithTotal = refunds.map(refund => {
         const totalValue = refund.Expenses.reduce((sum, expense) => sum + expense.value, 0);
         return {

@@ -1,16 +1,33 @@
 const { Project } = require('../models');
+const ProjectPreferences = require('../models/mongodb/project.preference.js');
 const fs = require("fs");
 
 class requestHandler {
-    //POST
+    // POST
     createProject = (req, res) => {
         let { body } = req;
         let project = {
             name: body.name,
         }
 
-        Project.create(project).then((response) => {
-            res.status(201).send({projectId: response.id});
+        Project.create(project).then((project) => {
+            if (body.preferences != null) {
+                let preferences = {
+                    projectId: project.id,
+                    refundLimit: body.preferences.refundLimit,
+                    expenseLimit: body.preferences.expenseLimit,
+                    quantityValues: body.preferences.quantityValues,
+                };
+    
+                ProjectPreferences.create(preferences).then((response) => {
+                    res.status(201).send({projectId: project.id});
+                }).catch((err) => {
+                    console.log(err);
+                    res.status(201).send({projectId: project.id, warning: "Preferences not saved"});
+                });
+            } else{
+                res.status(201).send({projectId: project.id});
+            }
         }).catch((err) => {
             console.log(err);
             res.status(400).send();
@@ -42,8 +59,24 @@ class requestHandler {
             where: {
                 id: params.id
             }
-        }).then((response) => {
-            res.status(200).send(response);
+        }).then(async (project) => {
+
+            if (!project) return res.status(404).send({ message: "Project not found" });
+            
+            ProjectPreferences.findOne({ projectId: project.id }).then((preferences)=>{
+                if (preferences) {
+                    project.dataValues.preferences = {
+                        refundLimit: preferences.refundLimit,
+                        expenseLimit: preferences.expenseLimit,
+                        quantityValues: preferences.quantityValues,
+                    };
+                } else project.dataValues.preferences = null;
+                res.status(200).send(project);
+            }).catch((err)=>{
+                console.log(err);
+                res.status(400).send();
+            });
+
         }).catch((err) => {
             console.log(err);
             res.status(400).send();

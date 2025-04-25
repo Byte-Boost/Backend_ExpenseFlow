@@ -1,11 +1,11 @@
-const { Project } = require('../models');
+const { Project, User } = require('../models');
 const ProjectPreferences = require('../models/mongodb/project.preference.js');
 const fs = require("fs");
 
 class requestHandler {
     // POST
     createProject = (req, res) => {
-        let { body } = req;
+        const { body } = req;
         let project = {
             name: body.name,
         }
@@ -36,14 +36,22 @@ class requestHandler {
 
     // GET
     getProjects = (req, res) => {
-        let { query } = req;
+        const { query, user } = req;
 
         let page = query.page ? parseInt(query.page) : 1;
         let limit = query.page ? parseInt(query.limit) : 50;
-
+        //where user is in project
         let filter = {
             offset: (page - 1) * limit,
             limit: limit,
+            include: [
+              {
+                model: User,
+                where: { id: user.id },
+                attributes: [],
+                through: { attributes: [] },
+              },
+            ],
         }
 
         Project.findAll(filter).then((projects) => {
@@ -54,7 +62,7 @@ class requestHandler {
         });
     }
     getProjectById = (req, res) => {
-        let { params } = req;
+        const { params } = req;
         Project.findOne({
             where: {
                 id: params.id

@@ -11,8 +11,7 @@ if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-router.post('/', controller.createRefund);
-
+router.post('/:projectId', controller.createRefund);
 router.post('/expense', (req, res) => {
     try {
         const { file, refundId, type, value, description } = req.body;

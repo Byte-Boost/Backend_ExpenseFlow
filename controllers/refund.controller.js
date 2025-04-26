@@ -7,11 +7,9 @@ const fs = require("fs");
 class requestHandler {
   // POST 
   createRefund = (req, res) => {
-    let { body, user } = req;
+    let { params, user } = req;
     
-    Project.findOne({ where: {
-        name: body.projectName,
-    }}).then((project) => {
+    Project.findByPk(params.projectId).then((project) => {
       
       let refund = {
         projectId: project.id,

@@ -127,7 +127,7 @@ class requestHandler {
       res.status(400).send();
     });
   }
-
+  
   // GET
   getRefunds = (req, res) => {
     let { query } = req;
@@ -216,6 +216,36 @@ class requestHandler {
     });
   }
 
+  // DELETE
+  deleteRefund = (req, res) => {
+    const { params, user } = req;
+
+    Refund.findOne({
+      where: {
+        id: params.id,
+        userId: user.id,
+      },
+    })
+      .then((refund) => {
+        if (!refund) {
+          return res.status(404).send({ message: "Refund not found" });
+        }
+
+        if (refund.status !== "new") {
+          return res
+            .status(403)
+            .send({ message: "Cannot delete a refund that is not new" });
+        }
+
+        return refund.destroy().then(() => {
+          res.status(204).send();
+        });
+      })
+      .catch((err) => {
+        console.error("Error deleting refund:", err);
+        res.status(500).send({ message: "Error deleting refund" });
+      });
+  };
 }
 
 module.exports = new requestHandler();

@@ -18,6 +18,10 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.ENUM("value", "quantity"),
       allowNull: false,
     },
+    quantityType: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
     value: {
       type: DataTypes.FLOAT,
       allowNull: false,
@@ -33,17 +37,17 @@ module.exports = (sequelize, DataTypes) => {
     refundId: {
       type: DataTypes.INTEGER,
       allowNull: false,
-    }
+    },
   });
-  Expense.associate = function(models) {
+  Expense.associate = function (models) {
     Expense.belongsTo(models.Refund, {
-      foreignKey: 'refundId',
-      onDelete: 'CASCADE'
+      foreignKey: "refundId",
+      onDelete: "CASCADE",
     }),
-    Expense.belongsTo(models.User, {
-      foreignKey: 'userId',
-      onDelete: 'CASCADE'
-    })
+      Expense.belongsTo(models.User, {
+        foreignKey: "userId",
+        onDelete: "CASCADE",
+      });
   };
   return Expense;
 };

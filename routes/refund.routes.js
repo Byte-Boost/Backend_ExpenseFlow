@@ -48,5 +48,6 @@ router.patch('/:id/authorize', controller.authRefund);
 router.get('/', controller.getRefunds);
 router.get('/:id', controller.getRefundById);
 router.get('/expense/:id', controller.getExpenseById);
+router.delete('/:id', controller.deleteRefund);
 
 module.exports = router;

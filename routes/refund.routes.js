@@ -14,7 +14,7 @@ if (!fs.existsSync(uploadDir)) {
 router.post("/expense", (req, res) => {
   try {
     const { file, refundId, type, quantityType, value, description } = req.body;
-    if (!file || !refundId || !type || !value || !description) {
+    if (!file || !refundId || !type || !value) {
       return res.status(400).send({ message: "Missing required fields" });
     }
     const buffer = Buffer.from(file, "base64");

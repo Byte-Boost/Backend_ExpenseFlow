@@ -26,7 +26,10 @@ module.exports = (sequelize, DataTypes) => {
     }),
     User.hasMany(models.Refund, {
       foreignKey: 'userId',
-    })
+    }),
+    User.belongsToMany(models.Project, {
+      through: 'UserProjects',
+    });
   };
 
   return User;

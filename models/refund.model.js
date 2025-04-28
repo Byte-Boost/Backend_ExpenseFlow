@@ -10,6 +10,10 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.INTEGER,
       allowNull: false,
     },
+    projectId: {
+      type: DataTypes.INTEGER,
+      allowNull: false, 
+    },
     date: {
       type: DataTypes.DATE,
       allowNull: true,
@@ -27,6 +31,10 @@ module.exports = (sequelize, DataTypes) => {
     }),
     Refund.belongsTo(models.User, {
       foreignKey: 'userId',
+      onDelete: 'CASCADE'
+    }),
+    Refund.belongsTo(models.Project, {
+      foreignKey: 'projectId',
       onDelete: 'CASCADE'
     })
   };

@@ -28,3 +28,12 @@ mysql.createConnection({
   await deleteUploads();
   await connection.end();
 })
+
+async function clearMongoDB() {
+  const mongoose = require("mongoose"); 
+  const mongoUri = `mongodb://${process.env.MONGODB_HOST}:${process.env.MONGODB_PORT}/${process.env.MONGODB_NAME}`; 
+  await mongoose.connect(mongoUri);
+  await mongoose.connection.dropDatabase();
+  await mongoose.disconnect();
+}
+clearMongoDB();

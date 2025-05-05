@@ -12,4 +12,6 @@ router.get('/preferences/:projectId', preferencesController.getPreferencesById);
 
 router.put('/preferences/:projectId', preferencesController.updatePreferenceById);
 
+router.delete('/:id', controller.deleteProject);
+
 module.exports = router;

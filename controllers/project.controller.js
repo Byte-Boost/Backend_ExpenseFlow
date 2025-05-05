@@ -11,23 +11,28 @@ class requestHandler {
         }
 
         Project.create(project).then((project) => {
+            let preferences = {
+                projectId: project.id,
+                refundLimit: 0,
+                expenseLimit: 0,
+                quantityValues: [],
+            }
             if (body.preferences != null) {
-                let preferences = {
+                preferences = {
                     projectId: project.id,
                     refundLimit: body.preferences.refundLimit,
                     expenseLimit: body.preferences.expenseLimit,
                     quantityValues: body.preferences.quantityValues,
                 };
-    
-                ProjectPreferences.create(preferences).then((response) => {
-                    res.status(201).send({projectId: project.id});
-                }).catch((err) => {
-                    console.log(err);
-                    res.status(201).send({projectId: project.id, warning: "Preferences not saved"});
-                });
-            } else{
-                res.status(201).send({projectId: project.id});
             }
+                
+            ProjectPreferences.create(preferences).then((response) => {
+                res.status(201).send({projectId: project.id});
+            }).catch((err) => {
+                console.log(err);
+                res.status(201).send({projectId: project.id, warning: "Preferences not saved"});
+            });
+
         }).catch((err) => {
             console.log(err);
             res.status(400).send();
@@ -40,7 +45,7 @@ class requestHandler {
 
         let page = query.page ? parseInt(query.page) : 1;
         let limit = query.page ? parseInt(query.limit) : 50;
-        //where user is in project
+
         let filter = {
             offset: (page - 1) * limit,
             limit: limit,
@@ -85,6 +90,29 @@ class requestHandler {
                 res.status(400).send();
             });
 
+        }).catch((err) => {
+            console.log(err);
+            res.status(400).send();
+        })
+    }
+
+    // DELETE
+    deleteProject = (req, res) => {
+        const { params } = req;
+        Project.findOne({
+            where: {
+                id: params.id
+            }
+        }).then((project) => {
+            if (!project) return res.status(404).send({ message: "Project not found" });
+            ProjectPreferences.deleteOne({id: project.id}).then((response) => {
+                project.destroy().then(() => {
+                    res.status(204).send();
+                }).catch(err=>{
+                    console.log(err);
+                    res.status(400).send();
+                });
+            })
         }).catch((err) => {
             console.log(err);
             res.status(400).send();

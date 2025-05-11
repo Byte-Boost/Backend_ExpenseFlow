@@ -140,7 +140,7 @@ class requestHandler {
 
   // GET
   getRefunds = (req, res) => {
-    let { query } = req;
+    let { user, query } = req;
 
     let TIMEZONE_OFFSET = query.timezone ? parseInt(query.timezone) : -3;
     let page = query.page ? parseInt(query.page) : 1;
@@ -149,7 +149,7 @@ class requestHandler {
     let filter = {
       where: {
         status: { [Op.ne]: "new" },
-        userId: req.user.id,
+        userId: user.admin ? {[Op.ne]: null} : req.user.id,
       },
       offset: (page - 1) * limit,
       limit: limit,
@@ -203,10 +203,10 @@ class requestHandler {
       });
   };
   getRefundById = (req, res) => {
-    let { params } = req;
+    let { user, params } = req;
     Refund.findOne({
       where: {
-        userId: req.user.id,
+        userId: user.admin ? {[Op.ne]: null} : req.user.id,
         id: params.id,
       },
     })
@@ -219,10 +219,10 @@ class requestHandler {
       });
   };
   getExpenseById = (req, res) => {
-    let { params } = req;
+    let { user, params } = req;
     Expense.findOne({
       where: {
-        userId: req.user.id,
+        userId: user.admin ? {[Op.ne]: null} : req.user.id,
         id: params.id,
       },
     })

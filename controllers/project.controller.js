@@ -52,7 +52,7 @@ class requestHandler {
             include: [
               {
                 model: User,
-                where: { id: user.id },
+                where: user.admin ? {} : { id: user.id },
                 attributes: [],
                 through: { attributes: [] },
               },

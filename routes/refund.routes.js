@@ -1,5 +1,6 @@
 const controller = require("../controllers/refund.controller.js");
 const router = require("express").Router();
+const adminMiddleware = require('../middleware/admin.middleware');
 
 const path = require("path");
 const fs = require("fs");
@@ -44,7 +45,7 @@ router.post("/expense", (req, res) => {
 router.post("/:projectId", controller.createRefund);
 
 router.patch("/:id/close", controller.closeRefund);
-router.patch("/:id/authorize", controller.authRefund);
+router.patch("/:id/authorize", adminMiddleware, controller.authRefund);
 
 router.get("/", controller.getRefunds);
 router.get("/:id", controller.getRefundById);

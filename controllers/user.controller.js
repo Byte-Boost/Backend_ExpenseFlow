@@ -3,7 +3,7 @@ const service = require("../services/account.services.js");
 
 
 class requestHandler {
-  // POST - Registrar usuário
+  // POST
   registerUser = async (req, res) => {
     const { email, password } = req.body;
     if (!email || !password) {
@@ -108,6 +108,33 @@ class requestHandler {
         res.status(400).send();
       });
 
+  };
+
+  // GET
+  getUsers = async (req, res) => {
+    const { user } = req;
+
+    if (!user.id) {
+      return res.status(400).send();
+    }
+
+    User.findAll({
+      attributes: ['id', 'email'],
+      include: [
+        {
+          model: Project,
+          as: 'projects',
+          attributes: ['id', 'name'],
+          through: {
+            attributes: []
+          }
+        }
+      ] 
+    }).then((users) => {
+      res.status(200).send(users);
+    }).catch((err)=>{
+      res.status(400).send({ message: "Error getting users" });
+    })
   };
 }
 

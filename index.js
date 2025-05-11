@@ -4,6 +4,7 @@ const connectMongo = require('./mongodb');
 connectMongo();
 const PORT = process.env.PORT || 8080;
 const authMiddleware = require('./middleware/auth.middleware');
+const startup = require('./services/startup.services');
 const db = require('./models');
 const cors = require('cors');
 const bodyParser = require('body-parser');
@@ -22,5 +23,6 @@ app.use('/refund', require('./routes/refund.routes'));
 app.use('/project', require('./routes/project.routes'));
 
 db.sequelize.sync().then(()=>{
+  startup.generateAdmin();
   app.listen(PORT, ()=>console.log(`Server running on https://localhost:${PORT}`));
 });

@@ -55,3 +55,256 @@ router.get("/:id", controller.getRefundById);
 router.delete("/:id", controller.deleteRefund);
 
 module.exports = router;
+
+/**
+ * @swagger
+ * tags:
+ *   name: Refunds
+ *   description: Refund and expense management
+ */
+
+/**
+ * @swagger
+ * /refund/{projectId}:
+ *   post:
+ *     tags: [Refunds]
+ *     summary: Create a new refund request
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: projectId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Project ID to associate the refund with
+ *     responses:
+ *       201:
+ *         description: Refund created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 refundId:
+ *                   type: integer
+ *                   example: 5
+ *       400:
+ *         description: Project not found or error creating refund
+ */
+
+/**
+ * @swagger
+ * /refund/expense:
+ *   post:
+ *     tags: [Refunds]
+ *     summary: Create an expense for a refund
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [file, refundId, type, value]
+ *             properties:
+ *               file:
+ *                 type: string
+ *                 format: base64
+ *               refundId:
+ *                 type: integer
+ *               type:
+ *                 type: string
+ *               quantityType:
+ *                 type: string
+ *                 nullable: true
+ *               value:
+ *                 type: number
+ *               description:
+ *                 type: string
+ *                 nullable: true
+ *     responses:
+ *       201:
+ *         description: Expense created successfully
+ *       400:
+ *         description: Invalid refund ID or missing fields
+ *       500:
+ *         description: Error saving file or creating expense
+ */
+
+/**
+ * @swagger
+ * /refund/{id}/close:
+ *   patch:
+ *     tags: [Refunds]
+ *     summary: Close a refund request
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Refund closed successfully
+ *       400:
+ *         description: Refund not found
+ *       500:
+ *         description: Server error
+ */
+
+/**
+ * @swagger
+ * /refund/{id}/authorize:
+ *   patch:
+ *     tags: [Refunds]
+ *     summary: Approve or reject a refund
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: approved
+ *         required: true
+ *         schema:
+ *           type: boolean
+ *     responses:
+ *       200:
+ *         description: Refund status updated
+ *       400:
+ *         description: Invalid refund or status
+ */
+
+/**
+ * @swagger
+ * /refund:
+ *   get:
+ *     tags: [Refunds]
+ *     summary: Get refunds by filters
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *         description: Comma-separated list of statuses (e.g., approved,in-process)
+ *       - in: query
+ *         name: projectId
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: periodStart
+ *         schema:
+ *           type: string
+ *           format: date
+ *       - in: query
+ *         name: periodEnd
+ *         schema:
+ *           type: string
+ *           format: date
+ *       - in: query
+ *         name: timezone
+ *         schema:
+ *           type: integer
+ *           example: -3
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: List of refunds
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                   status:
+ *                     type: string
+ *                   totalValue:
+ *                     type: number
+ *       400:
+ *         description: Error fetching refunds
+ */
+
+/**
+ * @swagger
+ * /refund/{id}:
+ *   get:
+ *     tags: [Refunds]
+ *     summary: Get refund by ID
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Refund data
+ *       400:
+ *         description: Error fetching refund
+ */
+
+/**
+ * @swagger
+ * /refund/expense/{id}:
+ *   get:
+ *     tags: [Refunds]
+ *     summary: Get expense by ID
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Expense data
+ *       400:
+ *         description: Error fetching expense
+ */
+
+/**
+ * @swagger
+ * /refund/{id}:
+ *   delete:
+ *     tags: [Refunds]
+ *     summary: Delete a refund
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       204:
+ *         description: Refund deleted successfully
+ *       403:
+ *         description: Cannot delete a refund that is not new
+ *       404:
+ *         description: Refund not found
+ *       500:
+ *         description: Server error
+ */
+

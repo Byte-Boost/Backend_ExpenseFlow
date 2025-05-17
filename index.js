@@ -8,6 +8,34 @@ const db = require('./models');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 
+// Swagger imports
+
+const swaggerUi = require('swagger-ui-express');
+const swaggerJsdoc = require('sawagger-jsdoc');
+
+const options = {
+  definition: {
+    openapi: '1.0.0', //N sei oq colocar
+    info: {
+      title: 'Expense-Flow API',
+      version: '1.0.0', // Não sei oq colocar
+    }, 
+    components: {
+      securitySchemes: {
+        BearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+        },
+      },
+    },
+  },
+  apis: ['./routes/*.js'],
+};
+
+const specs = swaggerJsdoc(options);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
+
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 

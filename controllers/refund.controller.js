@@ -1,6 +1,7 @@
 const { Refund } = require("../models");
 const { Expense } = require("../models");
 const { Project } = require("../models");
+const { User } = require("../models");
 const { Op } = require("sequelize");
 const fs = require("fs");
 
@@ -34,7 +35,6 @@ class requestHandler {
     let { body } = req;
     try {
       const refundExists = await Refund.findByPk(body.refundId);
-
       if (!refundExists) {
         if (body.file) {
           fs.unlink(body.file, (err) => {
@@ -145,19 +145,25 @@ class requestHandler {
     let TIMEZONE_OFFSET = query.timezone ? parseInt(query.timezone) : -3;
     let page = query.page ? parseInt(query.page) : 1;
     let limit = query.limit ? parseInt(query.limit) : 50;
+    let projectId = query.projectId ? query.projectId : null;
 
     let filter = {
       where: {
         status: { [Op.ne]: "new" },
         userId: user.admin ? {[Op.ne]: null} : req.user.id,
+        projectId: projectId ? projectId : {[Op.ne]: null}
       },
       offset: (page - 1) * limit,
       limit: limit,
       include: [
         {
           model: Expense,
-          attributes: ["id", "date", "type", "value"], // Only fetch these fields
+          attributes: ["id", "date", "type", "value"],
         },
+        {
+          model: User,
+          attributes: ["id", "email"],
+        }
       ],
     };
 
@@ -208,7 +214,20 @@ class requestHandler {
       where: {
         userId: user.admin ? {[Op.ne]: null} : req.user.id,
         id: params.id,
-      },
+      }, include: [
+        {
+          model: Expense,
+          attributes: ["id"],
+        },
+        {
+          model: User,
+          attributes: ["id", "email"],
+        },
+        {
+          model: Project,
+          attributes: ["id", "name"],
+        }
+      ]
     })
       .then((response) => {
         res.status(200).send(response);

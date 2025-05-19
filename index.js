@@ -8,14 +8,14 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 
 const swaggerUi = require('swagger-ui-express');
-const swaggerJsdoc = require('sawagger-jsdoc');
+const swaggerJsdoc = require('swagger-jsdoc');
 
 connectMongo();
 const PORT = process.env.PORT || 8080;
 
 const options = {
   definition: {
-    openapi: '1.0.0', 
+    openapi: '3.0.0',
     info: {
       title: 'Expense-Flow API',
       version: '1.0.0',

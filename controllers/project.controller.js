@@ -49,15 +49,17 @@ class requestHandler {
         let filter = {
             offset: (page - 1) * limit,
             limit: limit,
-            include: [
-              {
-                model: User,
-                where: user.admin ? {} : { id: user.id },
-                attributes: [],
-                through: { attributes: [] },
-              },
-            ],
         }
+        if (!user.admin){
+            filter.include = [
+                    {
+                        model: User,
+                        where: { id: user.id },
+                        attributes: [],
+                        through: { attributes: [] }
+                    }
+                ]
+        } 
 
         Project.findAll(filter).then((projects) => {
             res.status(200).send(projects);

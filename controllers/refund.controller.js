@@ -150,8 +150,8 @@ class requestHandler {
     let filter = {
       where: {
         status: { [Op.ne]: "new" },
-        userId: user.admin ? {[Op.ne]: null} : req.user.id,
-        projectId: projectId ? projectId : {[Op.ne]: null}
+        userId: user.admin ? { [Op.ne]: null } : req.user.id,
+        projectId: projectId ? projectId : { [Op.ne]: null },
       },
       offset: (page - 1) * limit,
       limit: limit,
@@ -163,7 +163,7 @@ class requestHandler {
         {
           model: User,
           attributes: ["id", "email"],
-        }
+        },
       ],
     };
 
@@ -212,9 +212,10 @@ class requestHandler {
     let { user, params } = req;
     Refund.findOne({
       where: {
-        userId: user.admin ? {[Op.ne]: null} : req.user.id,
+        userId: user.admin ? { [Op.ne]: null } : req.user.id,
         id: params.id,
-      }, include: [
+      },
+      include: [
         {
           model: Expense,
           attributes: ["id", "value"],
@@ -226,8 +227,8 @@ class requestHandler {
         {
           model: Project,
           attributes: ["id", "name"],
-        }
-      ]
+        },
+      ],
     })
       .then((refund) => {
         const totalValue = refund.Expenses.reduce(
@@ -235,9 +236,9 @@ class requestHandler {
           0
         );
         const refundWithTotal = {
-            ...refund.toJSON(),
-            totalValue,
-          }
+          ...refund.toJSON(),
+          totalValue,
+        };
         res.status(200).send(refundWithTotal);
       })
       .catch((err) => {
@@ -249,11 +250,21 @@ class requestHandler {
     let { user, params } = req;
     Expense.findOne({
       where: {
-        userId: user.admin ? {[Op.ne]: null} : req.user.id,
+        userId: user.admin ? { [Op.ne]: null } : req.user.id,
         id: params.id,
       },
     })
       .then((response) => {
+        try {
+          let ref_path = String(response.attachmentRef).replace(/\\+/g, "/");
+          console.log(ref_path);
+          let data = fs.readFileSync(ref_path);
+          // it's all @nininhosam fault's
+          data = `data:image/png;base64,${data.toString("base64")}`;
+          response.attachmentRef = data;
+        } catch (error) {
+          console.log("Error reading file: ", error.message);
+        }
         res.status(200).send(response);
       })
       .catch((err) => {

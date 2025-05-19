@@ -217,7 +217,7 @@ class requestHandler {
       }, include: [
         {
           model: Expense,
-          attributes: ["id"],
+          attributes: ["id", "value"],
         },
         {
           model: User,
@@ -229,8 +229,16 @@ class requestHandler {
         }
       ]
     })
-      .then((response) => {
-        res.status(200).send(response);
+      .then((refund) => {
+        const totalValue = refund.Expenses.reduce(
+          (sum, expense) => sum + expense.value,
+          0
+        );
+        const refundWithTotal = {
+            ...refund.toJSON(),
+            totalValue,
+          }
+        res.status(200).send(refundWithTotal);
       })
       .catch((err) => {
         console.log(err);

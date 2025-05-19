@@ -11,11 +11,11 @@ const bodyParser = require('body-parser');
 // Swagger imports
 
 const swaggerUi = require('swagger-ui-express');
-const swaggerJsdoc = require('sawagger-jsdoc');
+const swaggerJsdoc = require('swagger-jsdoc');
 
 const options = {
   definition: {
-    openapi: '1.0.0', //N sei oq colocar
+    openapi: '3.0.0', //N sei oq colocar
     info: {
       title: 'Expense-Flow API',
       version: '1.0.0', // Não sei oq colocar

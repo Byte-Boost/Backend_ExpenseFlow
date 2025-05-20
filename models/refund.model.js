@@ -23,14 +23,6 @@ module.exports = (sequelize, DataTypes) => {
       defaultValue: "new",
       allowNull: false,
     },
-    evaluationReason: {
-      type: DataTypes.TEXT,
-      allowNull: true,
-    },
-    reviewComment: {
-      type: DataTypes.TEXT,
-      allowNull: true, 
-    },
   });
 
   Refund.associate = function(models) {

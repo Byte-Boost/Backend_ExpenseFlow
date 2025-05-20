@@ -104,39 +104,61 @@ class requestHandler {
 
     // check for authorization
     Refund.findOne({
-      where: {
-        id: params.id,
-      },
-    })
-      .then((response) => {
-        if (response != null && response.status == "in-process") {
-          Refund.update(
-            {
-              status: query.approved === "true" ? "approved" : "rejected",
+    where: {
+      id: params.id,
+    },
+  })
+    .then((response) => {
+      if (response != null && response.status == "in-process") {
+        Refund.update(
+          {
+            status: query.approved === "true" ? "approved" : "rejected",
+          },
+          {
+            where: {
+              id: response.id,
             },
-            {
-              where: {
-                id: response.id,
-              },
-            }
-          )
-            .then((response) => {
-              res.status(200).send();
-            })
-            .catch((err) => {
-              console.log(err);
-              res.status(400).send({ err: "Invalid request" });
-            });
-        } else {
-          console.log("Refund non-existent or not in-process");
-          res.status(400).send({ err: "invalid request" });
-        }
-      })
-      .catch((err) => {
-        console.log(err);
-        res.status(400).send();
-      });
-  };
+          }
+        )
+          .then((response) => {
+            res.status(200).send();
+          })
+          .catch((err) => {
+            console.log(err);
+            res.status(400).send({ err: "Invalid request" });
+          });
+      } else {
+        console.log("Refund non-existent or not in-process");
+        res.status(400).send({ err: "invalid request" });
+      }
+    })
+    .catch((err) => {
+      console.log(err);
+      res.status(400).send();
+    });
+};
+setReviewComment = (req, res) => {
+  const { id } = req.params;
+  const { comment } = req.body;
+
+  Refund.findOne({ where: { id } })
+    .then((refund) => {
+      if (!refund) {
+        return res.status(404).send({ error: "Refund not found" });
+      }
+
+      refund.update({ reviewComment: comment })
+        .then(() => res.status(200).send({ message: "Review comment saved" }))
+        .catch((err) => {
+          console.error(err);
+          res.status(500).send({ error: "Failed to update review comment" });
+        });
+    })
+    .catch((err) => {
+      console.error(err);
+      res.status(500).send({ error: "Error finding refund" });
+    });
+};
 
   // GET
   getRefunds = (req, res) => {

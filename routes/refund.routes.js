@@ -46,6 +46,7 @@ router.post("/:projectId", controller.createRefund);
 
 router.patch("/:id/close", controller.closeRefund);
 router.patch("/:id/authorize", adminMiddleware, controller.authRefund);
+router.patch("/:id/review-comment", adminMiddleware, controller.setReviewComment);
 
 router.get("/", controller.getRefunds);
 router.get("/expense/:id", controller.getExpenseById);

@@ -99,8 +99,10 @@ class requestHandler {
       });
   };
   authRefund = (req, res) => {
-    let { params } = req;
-    let { query } = req;
+    let { params, query, body } = req;
+
+    const newStatus = query.approved === "true" ? "approved" : "rejected";
+    const rejectionReason = body.rejectionReason || null;
 
     // check for authorization
     Refund.findOne({
@@ -108,29 +110,29 @@ class requestHandler {
         id: params.id,
       },
     })
-      .then((response) => {
-        if (response != null && response.status == "in-process") {
-          Refund.update(
-            {
-              status: query.approved === "true" ? "approved" : "rejected",
-            },
-            {
-              where: {
-                id: response.id,
-              },
-            }
-          )
-            .then((response) => {
-              res.status(200).send();
-            })
-            .catch((err) => {
-              console.log(err);
-              res.status(400).send({ err: "Invalid request" });
-            });
-        } else {
+      .then((refund) => {
+        if (!refund || refund.status !== "in-process") {
           console.log("Refund non-existent or not in-process");
-          res.status(400).send({ err: "invalid request" });
+          return res.status(400).send({ err: "Invalid request" });
         }
+
+        if (newStatus === "rejected" && (!rejectionReason || rejectionReason.trim() === "")) {
+          return res.status(400).send({ err: "Rejection reason is required when rejecting a refund." });
+        }
+
+        refund.update(
+          {
+            status: newStatus,
+            rejectionReason: newStatus === "rejected" ? rejectionReason : null,
+          }
+        )
+          .then(() => {
+            res.status(200).send();
+          })
+          .catch((err) => {
+            console.log(err);
+            res.status(400).send({ err: "Invalid request" });
+          });
       })
       .catch((err) => {
         console.log(err);

@@ -23,6 +23,11 @@ module.exports = (sequelize, DataTypes) => {
       defaultValue: "new",
       allowNull: false,
     },
+    rejectionReason: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      defaultValue: null,
+    },
   });
 
   Refund.associate = function(models) {

@@ -1,11 +1,10 @@
-const db = require('./models');
-const connectMongo = require('./mongodb');
+const connectMongo = require('./mongodb.js');
 const { User, Expense, Refund, Project } = require("./models/index.js");
 const ProjectPreferences = require('./models/mongodb/project.preference.js');
 const service = require("./services/account.services.js");
+const clearDatabaseAndFiles = require('./clearDatabase.js');
 
 async function generateDummyData(){
-    await db.sequelize.sync();
     await connectMongo();
 
     const dummyUsers = [
@@ -33,8 +32,7 @@ async function generateDummyData(){
             email: "white@gmail.com",
             password: await service.getHashed("123"),
         },
-    ];
-    
+    ];    
     const dummyProjects = [
         {
             name: "Project A",
@@ -48,8 +46,7 @@ async function generateDummyData(){
         {
             name: "Project D",
         },
-    ]
-        
+    ]        
     const dummyRefunds = [
         { 
             projectId: 1,
@@ -87,8 +84,7 @@ async function generateDummyData(){
             date: new Date(), 
             status: "in-process" 
         },
-    ];
-        
+    ];        
     const dummyExpenses = [
         {
             userId: 1, 
@@ -145,7 +141,6 @@ async function generateDummyData(){
             description: "",
         },
     ];
-
     const dummyPreferences = [
         {
             projectId: 1,
@@ -180,7 +175,7 @@ async function generateDummyData(){
                 {"Gasoline": 9.5}
             ]
         },
-    ]
+    ];
         
     let users = await User.bulkCreate(dummyUsers, {returning: true});
     let projects = await Project.bulkCreate(dummyProjects, {returning: true});
@@ -195,15 +190,15 @@ async function generateDummyData(){
     await Refund.bulkCreate(dummyRefunds);
     await Expense.bulkCreate(dummyExpenses);
     await ProjectPreferences.insertMany(dummyPreferences);
+    console.log("\nDummy data generated\n");
 
 }
 
-generateDummyData()
-    .then(() => {
-    console.log("Dummy data generated.");
-    process.exit(0);
-    })
-    .catch((err) => {
-    console.error("Failed to generate dummy data:", err);
-    process.exit(1);
-    });
+
+async function startDummy() {
+  await clearDatabaseAndFiles();
+  await generateDummyData();
+  require('./index');
+}
+
+startDummy();

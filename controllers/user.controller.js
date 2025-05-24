@@ -120,10 +120,10 @@ class requestHandler {
 
     User.findAll({
       attributes: ['id', 'email'],
+      order: [['id', 'ASC']],
       include: [
         {
           model: Project,
-          as: 'projects',
           attributes: ['id', 'name'],
           through: {
             attributes: []
@@ -133,6 +133,7 @@ class requestHandler {
     }).then((users) => {
       res.status(200).send(users);
     }).catch((err)=>{
+      console.log(err);
       res.status(400).send({ message: "Error getting users" });
     })
   };

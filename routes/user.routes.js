@@ -6,8 +6,9 @@ const adminMiddleware = require('../middleware/admin.middleware');
 
 router.post("/register", adminMiddleware, userController.registerUser);
 router.post("/login", userController.loginUser);
-router.put("/subscribe", authMiddleware, userController.subscribeToProjects);
-router.put("/unsubscribe", authMiddleware, userController.unsubscribeFromProjects);
+router.put("/subscribe", adminMiddleware, userController.subscribeToProjects);
+router.put("/unsubscribe", adminMiddleware, userController.unsubscribeFromProjects);
+router.put("/setSubscriptions", adminMiddleware, userController.setUserSubscribedProjects);
 
 router.get("/", authMiddleware, adminMiddleware, userController.getUsers);
 

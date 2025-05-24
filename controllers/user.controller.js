@@ -41,14 +41,14 @@ class requestHandler {
   };
 
   subscribeToProjects = async (req, res) => {
-    const { body, user } = req;
+    const { body } = req;
 
-    if (!user.id || !body.projectIds) {
+    if (!body.userId || !body.projectIds) {
       return res.status(400).send();
     }
 
     // Subscribe user to project
-    User.findByPk(user.id)
+    User.findByPk(body.userId)
       .then((user) => {
         if (!user) return res.status(404).json({ message: "User not found." });
 
@@ -76,14 +76,14 @@ class requestHandler {
   };
 
   unsubscribeFromProjects = async (req, res) => {
-    const { body, user } = req;
+    const { body } = req;
 
-    if (!user.id || !body.projectIds) {
+    if (!body.userId || !body.projectIds) {
       return res.status(400).send();
     }
 
     // Subscribe user to project
-    User.findByPk(user.id)
+    User.findByPk(body.userId)
       .then((user) => {
         if (!user) return res.status(404).json({ message: "User not found." });
 
@@ -110,6 +110,42 @@ class requestHandler {
 
   };
 
+  setUserSubscribedProjects = async (req, res) => {
+    const { body } = req;
+
+    if (!body.userId || !body.projectIds) {
+      return res.status(400).send();
+    }
+
+    // Subscribe user to project
+    User.findByPk(body.userId)
+      .then((user) => {
+        if (!user) return res.status(404).json({ message: "User not found." });
+
+        Project.findAll({ where: { id: body.projectIds } })
+        .then((projects) => {
+          let message = null
+          if (projects.length !== body.projectIds.length && projects.length > 0) {
+            message = "Some projects have not been found, and have been ignored.";
+          }
+
+          return user.setProjects(projects).then(() => {
+            res.status(200).send({ message: message || "User unsubscribed from projects" });
+          });
+
+        }).catch((err) => {
+          console.log(err);
+          res.status(400).send({ message: "Error setting user project subscriptions" });
+        });
+        
+      })
+      .catch((err) => {
+        console.log(err);
+        res.status(400).send();
+      });
+
+  };
+
   // GET
   getUsers = async (req, res) => {
     const { user } = req;
@@ -120,10 +156,10 @@ class requestHandler {
 
     User.findAll({
       attributes: ['id', 'email'],
+      order: [['id', 'ASC']],
       include: [
         {
           model: Project,
-          as: 'projects',
           attributes: ['id', 'name'],
           through: {
             attributes: []
@@ -133,6 +169,7 @@ class requestHandler {
     }).then((users) => {
       res.status(200).send(users);
     }).catch((err)=>{
+      console.log(err);
       res.status(400).send({ message: "Error getting users" });
     })
   };

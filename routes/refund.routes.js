@@ -173,11 +173,23 @@ module.exports = router;
  *         required: true
  *         schema:
  *           type: boolean
+ *         description: true = approve, false = reject
+ *     requestBody:
+ *       description: Provide rejectionReason when rejecting a refund
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               rejectionReason:
+ *                 type: string
+ *                 description: Required if approved=false
  *     responses:
  *       200:
- *         description: Refund status updated
+ *         description: Refund status updated successfully
  *       400:
- *         description: Invalid refund or status
+ *         description: Invalid request or missing rejection reason
  */
 
 /**
@@ -185,7 +197,7 @@ module.exports = router;
  * /refund:
  *   get:
  *     tags: [Refunds]
- *     summary: Get refunds by filters
+ *     summary: Get refunds by filters with pagination and total values
  *     security:
  *       - BearerAuth: []
  *     parameters:
@@ -217,26 +229,65 @@ module.exports = router;
  *         name: page
  *         schema:
  *           type: integer
+ *           default: 1
  *       - in: query
  *         name: limit
  *         schema:
  *           type: integer
+ *           default: 50
  *     responses:
  *       200:
- *         description: List of refunds
+ *         description: List of refunds with pagination and total values
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   id:
- *                     type: integer
- *                   status:
- *                     type: string
- *                   totalValue:
- *                     type: number
+ *               type: object
+ *               properties:
+ *                 refunds:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                       status:
+ *                         type: string
+ *                       date:
+ *                         type: string
+ *                         format: date-time
+ *                       totalValue:
+ *                         type: number
+ *                         format: float
+ *                       Expenses:
+ *                         type: array
+ *                         items:
+ *                           type: object
+ *                           properties:
+ *                             id:
+ *                               type: integer
+ *                             date:
+ *                               type: string
+ *                               format: date-time
+ *                             type:
+ *                               type: string
+ *                             value:
+ *                               type: number
+ *                               format: float
+ *                       User:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: integer
+ *                           email:
+ *                             type: string
+ *                 maxPages:
+ *                   type: integer
+ *                 totalCount:
+ *                   type: integer
+ *                 page:
+ *                   type: integer
+ *                 limit:
+ *                   type: integer
  *       400:
  *         description: Error fetching refunds
  */
@@ -281,6 +332,79 @@ module.exports = router;
  *         description: Expense data
  *       400:
  *         description: Error fetching expense
+ */
+
+/**
+ * @swagger
+ * /refund/summary:
+ *   get:
+ *     tags: [Refunds]
+ *     summary: Get refund summary by status
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: projectId
+ *         schema:
+ *           type: integer
+ *         required: false
+ *         description: Filter by project ID
+ *       - in: query
+ *         name: periodStart
+ *         schema:
+ *           type: string
+ *           format: date
+ *         required: false
+ *         description: Start date filter (ISO date)
+ *       - in: query
+ *         name: periodEnd
+ *         schema:
+ *           type: string
+ *           format: date
+ *         required: false
+ *         description: End date filter (ISO date)
+ *       - in: query
+ *         name: timezone
+ *         schema:
+ *           type: integer
+ *           default: -3
+ *         required: false
+ *         description: Timezone offset (hours)
+ *     responses:
+ *       200:
+ *         description: Summary of refunds grouped by status
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 totalQuantity:
+ *                   type: integer
+ *                 totalValue:
+ *                   type: number
+ *                 approved:
+ *                   type: object
+ *                   properties:
+ *                     quantity:
+ *                       type: integer
+ *                     totalValue:
+ *                       type: number
+ *                 rejected:
+ *                   type: object
+ *                   properties:
+ *                     quantity:
+ *                       type: integer
+ *                     totalValue:
+ *                       type: number
+ *                 in-process:
+ *                   type: object
+ *                   properties:
+ *                     quantity:
+ *                       type: integer
+ *                     totalValue:
+ *                       type: number
+ *       400:
+ *         description: Error fetching summary
  */
 
 /**

@@ -73,7 +73,7 @@ module.exports = router;
  * /project:
  *   get:
  *     tags: [Projects]
- *     summary: Get all projects for the logged-in user
+ *     summary: Get projects list with pagination, filtered by user if not admin
  *     security:
  *       - BearerAuth: []
  *     parameters:
@@ -81,24 +81,45 @@ module.exports = router;
  *         name: page
  *         schema:
  *           type: integer
+ *           default: 1
  *       - in: query
  *         name: limit
  *         schema:
  *           type: integer
+ *           default: 50
  *     responses:
  *       200:
- *         description: List of projects
+ *         description: List of projects with pagination
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   id:
- *                     type: integer
- *                   name:
- *                     type: string
+ *               type: object
+ *               properties:
+ *                 projects:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                       name:
+ *                         type: string
+ *                       description:
+ *                         type: string
+ *                       createdAt:
+ *                         type: string
+ *                         format: date-time
+ *                       updatedAt:
+ *                         type: string
+ *                         format: date-time
+ *                 maxPages:
+ *                   type: integer
+ *                 totalCount:
+ *                   type: integer
+ *                 page:
+ *                   type: integer
+ *                 limit:
+ *                   type: integer
  *       400:
  *         description: Error fetching projects
  */

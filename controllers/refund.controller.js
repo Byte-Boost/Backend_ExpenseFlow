@@ -116,16 +116,20 @@ class requestHandler {
           return res.status(400).send({ err: "Invalid request" });
         }
 
-        if (newStatus === "rejected" && (!rejectionReason || rejectionReason.trim() === "")) {
-          return res.status(400).send({ err: "Rejection reason is required when rejecting a refund." });
+        if (
+          newStatus === "rejected" &&
+          (!rejectionReason || rejectionReason.trim() === "")
+        ) {
+          return res.status(400).send({
+            err: "Rejection reason is required when rejecting a refund.",
+          });
         }
 
-        refund.update(
-          {
+        refund
+          .update({
             status: newStatus,
             rejectionReason: newStatus === "rejected" ? rejectionReason : null,
-          }
-        )
+          })
           .then(() => {
             res.status(200).send();
           })
@@ -191,19 +195,33 @@ class requestHandler {
       filter.where.date[Op.lte] = endDate;
     }
 
-    Refund.findAll(filter)
-      .then((refunds) => {
-        const refundsWithTotal = refunds.map((refund) => {
-          const totalValue = refund.Expenses.reduce(
-            (sum, expense) => sum + expense.value,
-            0
-          );
-          return {
-            ...refund.toJSON(),
-            totalValue,
-          };
-        });
-        res.status(200).send(refundsWithTotal);
+    Refund.count({ where: filter.where })
+      .then((totalCount) => {
+        Refund.findAll(filter)
+          .then((refunds) => {
+            const refundsWithTotal = refunds.map((refund) => {
+              const totalValue = refund.Expenses.reduce(
+                (sum, expense) => sum + expense.value,
+                0
+              );
+              return {
+                ...refund.toJSON(),
+                totalValue,
+              };
+            });
+            const maxPages = Math.ceil(totalCount / limit);
+            res.status(200).send({
+              refunds: refundsWithTotal,
+              maxPages,
+              totalCount,
+              page,
+              limit,
+            });
+          })
+          .catch((err) => {
+            console.log(err);
+            res.status(400).send();
+          });
       })
       .catch((err) => {
         console.log(err);
@@ -257,26 +275,23 @@ class requestHandler {
       },
     })
       .then((response) => {
-        if (response.attachmentRef == null || response.attachmentRef == '') res.status(200).json(response);
-        
+        if (response.attachmentRef == null || response.attachmentRef == "")
+          res.status(200).json(response);
         else {
           try {
-            
             let ref_path = String(response.attachmentRef).replace(/\\+/g, "/");
             let data = fs.readFileSync(ref_path);
-  
+
             data = `data:image/png;base64,${data.toString("base64")}`;
-            let jsonRes = response.toJSON()
+            let jsonRes = response.toJSON();
             jsonRes.attachmentRef = null;
             jsonRes.attachment = data;
             res.status(200).json(jsonRes);
-
           } catch (error) {
             console.log("Error reading file: ", error.message);
             res.status(400).send();
           }
         }
-
       })
       .catch((err) => {
         console.log(err);

@@ -7,8 +7,34 @@ const db = require('./models');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 
+const swaggerUi = require('swagger-ui-express');
+const swaggerJsdoc = require('swagger-jsdoc');
+
 connectMongo();
 const PORT = process.env.PORT || 8080;
+
+const options = {
+  definition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'Expense-Flow API',
+      version: '1.0.0',
+    }, 
+    components: {
+      securitySchemes: {
+        BearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+        },
+      },
+    },
+  },
+  apis: ['./routes/*.js'],
+};
+
+const specs = swaggerJsdoc(options);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));

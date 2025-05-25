@@ -17,16 +17,18 @@ module.exports = router;
 /**
  * @swagger
  * tags:
- *   name: Users
+ *   name: User
  *   description: User management
 */
 
 /**
  * @swagger
- * /users/register:
+ * /user/register:
  *   post:
- *     tags: [Users]
+ *     tags: [User]
  *     summary: Register a new user
+ *     security:
+ *       - BearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -52,9 +54,9 @@ module.exports = router;
 
 /**
  * @swagger
- * /users/login:
+ * /user/login:
  *   post:
- *     tags: [Users]
+ *     tags: [User]
  *     summary: Log in a user
  *     requestBody:
  *       required: true
@@ -89,9 +91,9 @@ module.exports = router;
 
 /**
  * @swagger
- * /users/subscribe:
+ * /user/subscribe:
  *   put:
- *     tags: [Users]
+ *     tags: [User]
  *     summary: Subscribe user to projects
  *     security:
  *       - BearerAuth: []
@@ -103,7 +105,11 @@ module.exports = router;
  *             type: object
  *             required:
  *               - projectIds
+ *               - userId
  *             properties:
+ *               userId:
+ *                 type: integer
+ *                 example: 1
  *               projectIds:
  *                 type: array
  *                 items:
@@ -130,9 +136,9 @@ module.exports = router;
 
 /**
  * @swagger
- * /users/unsubscribe:
+ * /user/unsubscribe:
  *   put:
- *     tags: [Users]
+ *     tags: [User]
  *     summary: Unsubscribe user from projects
  *     security:
  *       - BearerAuth: []
@@ -144,7 +150,11 @@ module.exports = router;
  *             type: object
  *             required:
  *               - projectIds
+ *               - userId
  *             properties:
+ *               userId:
+ *                 type: integer
+ *                 example: 1
  *               projectIds:
  *                 type: array
  *                 items:
@@ -161,6 +171,51 @@ module.exports = router;
  *                 message:
  *                   type: string
  *                   example: User unsubscribed from projects
+ *       400:
+ *         description: Bad Request
+ *       404:
+ *         description: User not found
+ *       401:
+ *         description: Unauthorized
+ */
+
+/**
+ * @swagger
+ * /user/setSubscriptions:
+ *   put:
+ *     tags: [User]
+ *     summary: Set user's subscribed projects
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - projectIds
+ *               - userId
+ *             properties:
+ *               userId:
+ *                 type: integer
+ *                 example: 1
+ *               projectIds:
+ *                 type: array
+ *                 items:
+ *                   type: integer
+ *                 example: [1, 2]
+ *     responses:
+ *       200:
+ *         description: User subscriptions set successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: User's subscriptions set
  *       400:
  *         description: Bad Request
  *       404:

@@ -266,6 +266,69 @@ class requestHandler {
         res.status(400).send();
       });
   };
+  getSummary = async (req, res) => {
+    let { user, query } = req;
+    let TIMEZONE_OFFSET = query.timezone ? parseInt(query.timezone) : -3;
+    let projectId = query.projectId ? query.projectId : null;
+
+    const statuses = ["approved", "rejected", "in-process"];
+
+    let baseWhere = {
+      userId: user.admin ? { [Op.ne]: null } : req.user.id,
+      projectId: projectId ? projectId : { [Op.ne]: null },
+    };
+    if (query.periodStart) {
+      let startDate = new Date(query.periodStart);
+      startDate.setUTCMinutes(startDate.getMinutes() - TIMEZONE_OFFSET * 60);
+      baseWhere.date = { [Op.gte]: startDate };
+    }
+    if (query.periodEnd) {
+      let endDate = new Date(query.periodEnd);
+      endDate.setUTCHours(23, 59, 59, 999);
+      endDate.setUTCMinutes(endDate.getMinutes() - TIMEZONE_OFFSET * 60);
+      baseWhere.date = baseWhere.date || {};
+      baseWhere.date[Op.lte] = endDate;
+    }
+    try {
+      let summary = {};
+      let grandTotal = 0;
+      let totalQuantity = 0;
+      for (const status of statuses) {
+        const where = { ...baseWhere, status };
+        const refunds = await Refund.findAll({
+          where,
+          include: [{ model: Expense, attributes: ["value"] }],
+        });
+
+        const totalValue = refunds.reduce((sum, refund) => {
+          return (
+            sum +
+            refund.Expenses.reduce(
+              (expSum, expense) => expSum + expense.value,
+              0
+            )
+          );
+        }, 0);
+
+        summary[status] = {
+          quantity: refunds.length,
+          totalValue,
+        };
+        grandTotal += totalValue;
+        totalQuantity += refunds.length;
+      }
+
+      res.status(200).send({
+        totalQuantity: totalQuantity,
+        totalValue: grandTotal,
+        ...summary,
+      });
+    } catch (err) {
+      console.log(err);
+      res.status(400).send();
+    }
+  };
+
   getExpenseById = (req, res) => {
     let { user, params } = req;
     Expense.findOne({

@@ -1,6 +1,7 @@
 const { Refund } = require("../models");
 const { Expense } = require("../models");
 const { Project } = require("../models");
+const { User } = require("../models");
 const { Op } = require("sequelize");
 const fs = require("fs");
 
@@ -34,7 +35,6 @@ class requestHandler {
     let { body } = req;
     try {
       const refundExists = await Refund.findByPk(body.refundId);
-
       if (!refundExists) {
         if (body.file) {
           fs.unlink(body.file, (err) => {
@@ -99,8 +99,10 @@ class requestHandler {
       });
   };
   authRefund = (req, res) => {
-    let { params } = req;
-    let { query } = req;
+    let { params, query, body } = req;
+
+    const newStatus = query.approved === "true" ? "approved" : "rejected";
+    const rejectionReason = body.rejectionReason || null;
 
     // check for authorization
     Refund.findOne({
@@ -108,29 +110,33 @@ class requestHandler {
         id: params.id,
       },
     })
-      .then((response) => {
-        if (response != null && response.status == "in-process") {
-          Refund.update(
-            {
-              status: query.approved === "true" ? "approved" : "rejected",
-            },
-            {
-              where: {
-                id: response.id,
-              },
-            }
-          )
-            .then((response) => {
-              res.status(200).send();
-            })
-            .catch((err) => {
-              console.log(err);
-              res.status(400).send({ err: "Invalid request" });
-            });
-        } else {
+      .then((refund) => {
+        if (!refund || refund.status !== "in-process") {
           console.log("Refund non-existent or not in-process");
-          res.status(400).send({ err: "invalid request" });
+          return res.status(400).send({ err: "Invalid request" });
         }
+
+        if (
+          newStatus === "rejected" &&
+          (!rejectionReason || rejectionReason.trim() === "")
+        ) {
+          return res.status(400).send({
+            err: "Rejection reason is required when rejecting a refund.",
+          });
+        }
+
+        refund
+          .update({
+            status: newStatus,
+            rejectionReason: newStatus === "rejected" ? rejectionReason : null,
+          })
+          .then(() => {
+            res.status(200).send();
+          })
+          .catch((err) => {
+            console.log(err);
+            res.status(400).send({ err: "Invalid request" });
+          });
       })
       .catch((err) => {
         console.log(err);
@@ -140,23 +146,29 @@ class requestHandler {
 
   // GET
   getRefunds = (req, res) => {
-    let { query } = req;
+    let { user, query } = req;
 
     let TIMEZONE_OFFSET = query.timezone ? parseInt(query.timezone) : -3;
     let page = query.page ? parseInt(query.page) : 1;
     let limit = query.limit ? parseInt(query.limit) : 50;
+    let projectId = query.projectId ? query.projectId : null;
 
     let filter = {
       where: {
         status: { [Op.ne]: "new" },
-        userId: req.user.id,
+        userId: user.admin ? { [Op.ne]: null } : req.user.id,
+        projectId: projectId ? projectId : { [Op.ne]: null },
       },
       offset: (page - 1) * limit,
       limit: limit,
       include: [
         {
           model: Expense,
-          attributes: ["id", "date", "type", "value"], // Only fetch these fields
+          attributes: ["id", "date", "type", "value"],
+        },
+        {
+          model: User,
+          attributes: ["id", "email"],
         },
       ],
     };
@@ -183,19 +195,33 @@ class requestHandler {
       filter.where.date[Op.lte] = endDate;
     }
 
-    Refund.findAll(filter)
-      .then((refunds) => {
-        const refundsWithTotal = refunds.map((refund) => {
-          const totalValue = refund.Expenses.reduce(
-            (sum, expense) => sum + expense.value,
-            0
-          );
-          return {
-            ...refund.toJSON(),
-            totalValue,
-          };
-        });
-        res.status(200).send(refundsWithTotal);
+    Refund.count({ where: filter.where })
+      .then((totalCount) => {
+        Refund.findAll(filter)
+          .then((refunds) => {
+            const refundsWithTotal = refunds.map((refund) => {
+              const totalValue = refund.Expenses.reduce(
+                (sum, expense) => sum + expense.value,
+                0
+              );
+              return {
+                ...refund.toJSON(),
+                totalValue,
+              };
+            });
+            const maxPages = Math.ceil(totalCount / limit);
+            res.status(200).send({
+              refunds: refundsWithTotal,
+              maxPages,
+              totalCount,
+              page,
+              limit,
+            });
+          })
+          .catch((err) => {
+            console.log(err);
+            res.status(400).send();
+          });
       })
       .catch((err) => {
         console.log(err);
@@ -203,31 +229,132 @@ class requestHandler {
       });
   };
   getRefundById = (req, res) => {
-    let { params } = req;
+    let { user, params } = req;
     Refund.findOne({
       where: {
-        userId: req.user.id,
+        userId: user.admin ? { [Op.ne]: null } : req.user.id,
         id: params.id,
       },
+      include: [
+        {
+          model: Expense,
+          attributes: ["id", "value"],
+        },
+        {
+          model: User,
+          attributes: ["id", "email"],
+        },
+        {
+          model: Project,
+          attributes: ["id", "name"],
+        },
+      ],
     })
-      .then((response) => {
-        res.status(200).send(response);
+      .then((refund) => {
+        const totalValue = refund.Expenses.reduce(
+          (sum, expense) => sum + expense.value,
+          0
+        );
+        const refundWithTotal = {
+          ...refund.toJSON(),
+          totalValue,
+        };
+        res.status(200).send(refundWithTotal);
       })
       .catch((err) => {
         console.log(err);
         res.status(400).send();
       });
   };
+  getSummary = async (req, res) => {
+    let { user, query } = req;
+    let TIMEZONE_OFFSET = query.timezone ? parseInt(query.timezone) : -3;
+    let projectId = query.projectId ? query.projectId : null;
+
+    const statuses = ["approved", "rejected", "in-process"];
+
+    let baseWhere = {
+      userId: user.admin ? { [Op.ne]: null } : req.user.id,
+      projectId: projectId ? projectId : { [Op.ne]: null },
+    };
+    if (query.periodStart) {
+      let startDate = new Date(query.periodStart);
+      startDate.setUTCMinutes(startDate.getMinutes() - TIMEZONE_OFFSET * 60);
+      baseWhere.date = { [Op.gte]: startDate };
+    }
+    if (query.periodEnd) {
+      let endDate = new Date(query.periodEnd);
+      endDate.setUTCHours(23, 59, 59, 999);
+      endDate.setUTCMinutes(endDate.getMinutes() - TIMEZONE_OFFSET * 60);
+      baseWhere.date = baseWhere.date || {};
+      baseWhere.date[Op.lte] = endDate;
+    }
+    try {
+      let summary = {};
+      let grandTotal = 0;
+      let totalQuantity = 0;
+      for (const status of statuses) {
+        const where = { ...baseWhere, status };
+        const refunds = await Refund.findAll({
+          where,
+          include: [{ model: Expense, attributes: ["value"] }],
+        });
+
+        const totalValue = refunds.reduce((sum, refund) => {
+          return (
+            sum +
+            refund.Expenses.reduce(
+              (expSum, expense) => expSum + expense.value,
+              0
+            )
+          );
+        }, 0);
+
+        summary[status] = {
+          quantity: refunds.length,
+          totalValue,
+        };
+        grandTotal += totalValue;
+        totalQuantity += refunds.length;
+      }
+
+      res.status(200).send({
+        totalQuantity: totalQuantity,
+        totalValue: grandTotal,
+        ...summary,
+      });
+    } catch (err) {
+      console.log(err);
+      res.status(400).send();
+    }
+  };
+
   getExpenseById = (req, res) => {
-    let { params } = req;
+    let { user, params } = req;
     Expense.findOne({
       where: {
-        userId: req.user.id,
+        userId: user.admin ? { [Op.ne]: null } : req.user.id,
         id: params.id,
       },
     })
       .then((response) => {
-        res.status(200).send(response);
+        if (response.attachmentRef == null || response.attachmentRef == "")
+          res.status(200).json(response);
+        else {
+          try {
+            let ref_path = String(response.attachmentRef).replace(/\\+/g, "/");
+            let data = fs.readFileSync(ref_path);
+
+            data = `data:image/png;base64,${data.toString("base64")}`;
+            let jsonRes = response.toJSON();
+            jsonRes.attachmentRef = null;
+            jsonRes.attachment = data;
+            res.status(200).json(jsonRes);
+          } catch (error) {
+            console.log("Error reading file: ", error.message);
+            res.status(400).send();
+          }
+        }
       })
       .catch((err) => {
         console.log(err);

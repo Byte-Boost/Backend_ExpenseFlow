@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  backend:
+    build: .
+    restart: always
+    container_name: backend_expenseflow
+    ports:
+      - "3200:3200"
+    depends_on:
+      - mysql
+      - mongodb
+    environment:
+      - PORT=3200
+      - ADM_CREDENTIALS_EMAIL=admin@gmail.com
+      - ADM_CREDENTIALS_PASSWORD=123
+      - DB_NAME=expense_db
+      - DB_USER=root
+      - DB_PASSWORD=fatec
+      - DB_HOST=mysql
+      - DB_DIALECT=mysql
+      - JWT_SECRET=AEoFdt2SdSFhAJpsB6GoO9aDZunZuzx4zHF57iaFWx4E3GJ280n5g3e1lZA5Bh6oidruWfCGJvkRhKvU
+      - MONGODB_HOST=mongodb
+      - MONGODB_PORT=27017
+      - MONGODB_NAME=ExpenseFlow
+
+  mysql:
+    image: mysql:8
+    restart: always
+    container_name: mysql_expenseflow
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: fatec
+      MYSQL_DATABASE: expense_db
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  mongodb:
+    image: mongo:6
+    restart: always
+    container_name: mongodb_expenseflow
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  mysql_data:
+  mongo_data:

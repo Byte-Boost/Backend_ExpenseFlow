@@ -170,6 +170,10 @@ class requestHandler {
           model: User,
           attributes: ["id", "email"],
         },
+        {
+          model: Project,
+          attributes: ["name"],
+        },
       ],
     };
 

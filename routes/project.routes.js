@@ -61,7 +61,9 @@ module.exports = router;
  *                   quantityValues:
  *                     type: array
  *                     items:
- *                       type: string
+ *                       type: object
+ *                       additionalProperties:
+ *                         type: number
  *     responses:
  *       201:
  *         description: Project created

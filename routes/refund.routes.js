@@ -99,6 +99,8 @@ module.exports = router;
  *   post:
  *     tags: [Refunds]
  *     summary: Create an expense for a refund
+ *     security:
+ *       - BearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -159,7 +161,7 @@ module.exports = router;
  * /refund/{id}/authorize:
  *   patch:
  *     tags: [Refunds]
- *     summary: Approve or reject a refund
+ *     summary: Approve or reject a refund (admin only)
  *     security:
  *       - BearerAuth: []
  *     parameters:
@@ -309,10 +311,59 @@ module.exports = router;
  *     responses:
  *       200:
  *         description: Refund data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                 userId:
+ *                   type: integer
+ *                 projectId:
+ *                   type: integer
+ *                 date:
+ *                   type: string
+ *                   format: date-time
+ *                 status:
+ *                   type: string
+ *                 rejectionReason:
+ *                   type: string
+ *                   nullable: true
+ *                 createdAt:
+ *                   type: string
+ *                   format: date-time
+ *                 updatedAt:
+ *                   type: string
+ *                   format: date-time
+ *                 Expenses:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                       value:
+ *                         type: number
+ *                 User:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                     email:
+ *                       type: string
+ *                 Project:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                     name:
+ *                       type: string
+ *                 totalValue:
+ *                   type: number
  *       400:
  *         description: Error fetching refund
  */
-
 /**
  * @swagger
  * /refund/expense/{id}:
@@ -330,10 +381,43 @@ module.exports = router;
  *     responses:
  *       200:
  *         description: Expense data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                 userId:
+ *                   type: integer
+ *                 date:
+ *                   type: string
+ *                   format: date-time
+ *                 type:
+ *                   type: string
+ *                 quantityType:
+ *                   type: string
+ *                   nullable: true
+ *                 value:
+ *                   type: number
+ *                 attachmentRef:
+ *                   type: string
+ *                 description:
+ *                   type: string
+ *                 refundId:
+ *                   type: integer
+ *                 createdAt:
+ *                   type: string
+ *                   format: date-time
+ *                 updatedAt:
+ *                   type: string
+ *                   format: date-time
+ *                 projectId:
+ *                   type: integer
+ *                   nullable: true
  *       400:
  *         description: Error fetching expense
  */
-
 /**
  * @swagger
  * /refund/summary:
@@ -431,4 +515,3 @@ module.exports = router;
  *       500:
  *         description: Server error
  */
-

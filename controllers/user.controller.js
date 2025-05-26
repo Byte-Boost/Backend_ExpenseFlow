@@ -130,7 +130,7 @@ class requestHandler {
           }
 
           return user.setProjects(projects).then(() => {
-            res.status(200).send({ message: message || "User unsubscribed from projects" });
+            res.status(200).send({ message: message || "User's subscriptions set" });
           });
 
         }).catch((err) => {

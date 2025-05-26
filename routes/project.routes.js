@@ -1,19 +1,27 @@
-const controller = require('../controllers/project.controller.js');
-const preferencesController = require('../controllers/mongodb/projectPreference.controller.js');
-const adminMiddleware = require('../middleware/admin.middleware');
-const router = require('express').Router();
+const controller = require("../controllers/project.controller.js");
+const preferencesController = require("../controllers/mongodb/projectPreference.controller.js");
+const adminMiddleware = require("../middleware/admin.middleware");
+const router = require("express").Router();
 
-router.post('/', adminMiddleware, controller.createProject);
-router.post('/preferences', adminMiddleware, preferencesController.createPreference);
+router.post("/", adminMiddleware, controller.createProject);
+router.post(
+  "/preferences",
+  adminMiddleware,
+  preferencesController.createPreference
+);
 
-router.get('/', controller.getProjects);
-router.get('/preferences', preferencesController.getAllPreferences);
-router.get('/:id', controller.getProjectById);
-router.get('/preferences/:projectId', preferencesController.getPreferencesById);
+router.get("/", controller.getProjects);
+router.get("/preferences", preferencesController.getAllPreferences);
+router.get("/:id", controller.getProjectById);
+router.get("/preferences/:projectId", preferencesController.getPreferencesById);
 
-router.put('/preferences/:projectId', adminMiddleware, preferencesController.updatePreferenceById);
+router.put(
+  "/preferences/:projectId",
+  adminMiddleware,
+  preferencesController.updatePreferenceById
+);
 
-router.delete('/:id', adminMiddleware, controller.deleteProject);
+router.delete("/:id", adminMiddleware, controller.deleteProject);
 
 module.exports = router;
 
@@ -29,7 +37,9 @@ module.exports = router;
  * /project:
  *   post:
  *     tags: [Projects]
- *     summary: Create a new project
+ *     summary: Create a new project (admin only)
+ *     security:
+ *       - BearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -51,7 +61,9 @@ module.exports = router;
  *                   quantityValues:
  *                     type: array
  *                     items:
- *                       type: string
+ *                       type: object
+ *                       additionalProperties:
+ *                         type: number
  *     responses:
  *       201:
  *         description: Project created
@@ -172,6 +184,8 @@ module.exports = router;
  * @swagger
  * /project/preferences:
  *   get:
+ *     security:
+ *       - BearerAuth: []
  *     tags: [Projects]
  *     summary: Get all project preferences
  *     responses:
@@ -185,6 +199,8 @@ module.exports = router;
  * @swagger
  * /project/preferences/{projectId}:
  *   get:
+ *     security:
+ *       - BearerAuth: []
  *     tags: [Projects]
  *     summary: Get preferences for a project by project ID
  *     parameters:
@@ -207,7 +223,9 @@ module.exports = router;
  * /project/preferences:
  *   post:
  *     tags: [Projects]
- *     summary: Create preferences for a project
+ *     summary: Create preferences for a project (admin only)
+ *     security:
+ *       - BearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -238,7 +256,9 @@ module.exports = router;
  * /project/preferences/{projectId}:
  *   put:
  *     tags: [Projects]
- *     summary: Update preferences for a project
+ *     summary: Update preferences for a project (admin only)
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: projectId

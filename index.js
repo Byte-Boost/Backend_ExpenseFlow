@@ -41,6 +41,7 @@ app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 app.use(cors());  
 app.use(express.json())
 
+app.use('/dev', require('./routes/dev.routes'));
 app.use('/user', require('./routes/user.routes'));
 app.use(authMiddleware);
 app.use('/refund', require('./routes/refund.routes'));
